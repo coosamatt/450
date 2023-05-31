@@ -1,0 +1,11 @@
+{
+  "name": "Disney Planner",
+  "version": "1.0.0",
+  "description": "Find best times to visit Disney World",
+  "main": "index.js",
+  "keywords": [],
+  "author": "Matthew Sheets",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}
