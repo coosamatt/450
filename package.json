@@ -3,9 +3,25 @@
   "version": "1.0.0",
   "description": "Find best times to visit Disney World",
   "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "server": "nodemon --watch . --exec babel-node server.js"
+  },
   "keywords": [],
   "author": "Matthew Sheets",
   "license": "ISC",
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^7.1.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.21.5",
+    "@babel/core": "^7.21.8",
+    "@babel/node": "^7.20.7",
+    "@babel/preset-env": "^7.21.5",
+    "nodemon": "^2.0.22"
+  }
 }
