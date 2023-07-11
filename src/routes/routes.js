@@ -1,91 +1,67 @@
 import { Router } from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
-import mongoose from "mongoose";
-import cheerio from "cheerio";
+import { load } from "cheerio";
 import axios from "axios";
+import {
+  findBestWeekendPerMonth,
+  findLeastBusyWeek,
+  findLeastBusyWeekend,
+  getDaysOfMonth,
+  getFormattedDates,
+} from "../utils/helpers.js";
 
 const router = Router();
 
-// Install middleware
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(morgan("dev"));
 
-function getFormattedDates() {
-  const startDate = new Date("2022-05-01");
-  const endDate = new Date(); // Current date
-
-  const dates = [];
-
-  while (startDate <= endDate) {
-    const year = startDate.getFullYear();
-    const month = String(startDate.getMonth() + 1).padStart(2, "0");
-    const formattedDate = `${year}/${month}`;
-
-    dates.push(formattedDate);
-
-    startDate.setMonth(startDate.getMonth() + 1);
-  }
-
-  return dates;
-}
-
-//routes
 router.get("/scrapdata", async (req, res) => {
   try {
-    // const baseUrl = "https://queue-times.com/en-US/parks/6/calendar";
-
     const dates = getFormattedDates();
-
+ç
     const scrapedDataArray = await Promise.all(
       dates.map(async (item) => {
         const url = `/en-US/parks/6/calendar/${item}`;
 
-        const monthResponse = await axios.get(`https://queue-times.com${url}`); // Replace with the actual base URL
+        const monthResponse = await axios.get(`https://queue-times.com${url}`);
         const monthHtml = monthResponse.data;
-        const $month = cheerio.load(monthHtml);
+        const $month = load(monthHtml);
 
-        // Extract data from the provided HTML selector
         const tile = $month(
           "div.tile.is-parent.is-background.is-marginless.is-paddingless"
         );
 
-        const backgroundColor = tile
-          .find("a.tile.is-child.box.is-radiusless.is-clearfix")
-          .attr("style")
-          .match(/background: (.*?);/)[1];
+        const days = tile.find("a.tile.is-child.box.is-radiusless.is-clearfix");
 
-        const day = tile
-          .find(".tag.is-rounded.has-text-weight-bold.is-hidden-tablet")
-          .text()
-          .slice(0, 3);
-
-        const date = tile
-          .find(".tag.is-rounded.has-text-weight-bold.is-hidden-mobile")
-          .text();
-
-        const percentage = tile
+        const percentages = days
           .find(".tags.is-pulled-right span.tag")
-          .eq(0)
-          .text()
-          .trim();
+          .filter((i, el) => el.children[0].data.includes("%"))
+          .map((i, el) => el.children[0].data.trim())
+          .get();
 
-        // Create an object with the extracted data
-        const scrapedData = {
-          backgroundColor,
-          day,
-          percentage,
-        };
+        const datesOfMonth = getDaysOfMonth(item);
 
-        console.log("percentage", scrapedData);
+        const formattedData = datesOfMonth.map((dateItem, i) => ({
+          date: dateItem,
+          percentages: percentages[i],
+        }));
 
-        return scrapedData;
+        return formattedData;
       })
     );
 
+    const activities = scrapedDataArray.flat();
+
+    const bestWeekend = findLeastBusyWeekend(activities);
+
+    const bestWeek = findLeastBusyWeek(activities);
+
+    const bestWeekendPerMonth = findBestWeekendPerMonth(activities);
+
     console.log("Data scraped successfully");
-    res.status(200).json(scrapedDataArray);
+    res.status(200).json({ bestWeekend, bestWeek, bestWeekendPerMonth });
   } catch (error) {
     res.json(error);
   }
