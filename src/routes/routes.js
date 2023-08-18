@@ -20,7 +20,7 @@ router.use(morgan("dev"));
 router.get("/scrapdata", async (req, res) => {
   try {
     const dates = getFormattedDates();
-ç
+
     const scrapedDataArray = await Promise.all(
       dates.map(async (item) => {
         const url = `/en-US/parks/6/calendar/${item}`;
