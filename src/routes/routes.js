@@ -27,6 +27,7 @@ router.get("/scrapdata", async (req, res) => {
 
         const monthResponse = await axios.get(`https://queue-times.com${url}`);
         const monthHtml = monthResponse.data;
+        console.log(`Scraping data for monnth:`, monthHtml);
         const $month = load(monthHtml);
 
         const tile = $month(
@@ -40,28 +41,32 @@ router.get("/scrapdata", async (req, res) => {
           .filter((i, el) => el.children[0].data.includes("%"))
           .map((i, el) => el.children[0].data.trim())
           .get();
-
+        console.log("Percentages:", percentages);
         const datesOfMonth = getDaysOfMonth(item);
 
         const formattedData = datesOfMonth.map((dateItem, i) => ({
           date: dateItem,
           percentages: percentages[i],
         }));
-
+        console.log("Formatted data:", formattedData);
         return formattedData;
       })
     );
 
     const activities = scrapedDataArray.flat();
+    console.log("Activities:", activities);
 
     const bestWeekend = findLeastBusyWeekend(activities);
+    console.log("Best weekend:", bestWeekend);
 
     const bestWeek = findLeastBusyWeek(activities);
+    console.log("Best week:", bestWeek);
 
-    const bestWeekendPerMonth = findBestWeekendPerMonth(activities);
-
+    // will add later
+    // const bestWeekendPerMonth = findBestWeekendPerMonth(activities);
+    //   console.log("Best weekend per month:", bestWeekendPerMonth);
     console.log("Data scraped successfully");
-    res.status(200).json({ bestWeekend, bestWeek, bestWeekendPerMonth });
+    res.status(200).json({ bestWeekend, bestWeek });
   } catch (error) {
     res.json(error);
   }
